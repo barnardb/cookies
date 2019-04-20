@@ -29,8 +29,19 @@ Pull requests are welcome.
 Usage
 -----
 
+As explained by `cookies --help`:
+```text
+usage: ./cookies [options…] <URL>
+
+The following options are available:
+  -a, --accept-missing        don't fail with exit status 1 when cookies aren't found
+  -b, --browser stringArray   browser to try extracting a cookie from, can be repeated to try multiple browsers (default [chrome,firefox,safari])
+  -v, --verbose               enables logging to stderr
+```
+
+So for example:
 ```bash
-cookies www.example.com
+cookies http://www.example.com
 ``` 
 might yield
 ```
