@@ -11,8 +11,8 @@ This project wraps that library with some code to abstract browser differences a
 filter for cookies that match a URL, and provide a command-line interface.
 
 [zellyn/kooky]: https://github.com/zellyn/kooky
-[barnardb/kooky]: https://github.com/barnardb/kooky
-[zellyn/kookie #5]: https://github.com/zellyn/kooky/pull/5
+[fork]: https://github.com/barnardb/kooky
+[zellyn/kooky #5]: https://github.com/zellyn/kooky/pull/5
 
 
 Installing
