@@ -59,7 +59,7 @@ func parseCommandLine() (options options) {
   }
 
   if flagSet.NArg() != 1 {
-    fatalError("error: expected 1 argument but got %d\n", flag.NArg())
+    fatalError("error: expected 1 argument but got", flag.NArg())
   }
 
   options.url, err = url.Parse(flagSet.Arg(0))
