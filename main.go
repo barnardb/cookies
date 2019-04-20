@@ -12,7 +12,7 @@ import flag "github.com/spf13/pflag"
 type options struct {
   browsers []string
   url *url.URL
-  failWhenNotFound bool
+  acceptMissing bool
   verbose bool
 }
 
@@ -22,7 +22,7 @@ func main() {
 
   cookies := findCookies(options.url, options.browsers, logger)
   if len(cookies) == 0 {
-    if options.failWhenNotFound {
+    if !options.acceptMissing {
       os.Exit(1)
     }
     return
@@ -46,8 +46,8 @@ func parseCommandLine() (options options) {
     flagSet.PrintDefaults()
   }
 
+  flagSet.BoolVarP(&options.acceptMissing, "accept-missing", "a", false, "don't fail with exit status 1 when cookies aren't found")
   flagSet.StringArrayVarP(&options.browsers, "browser", "b", []string{"chrome", "firefox", "safari"}, "browser to try extracting a cookie from, can be repeated to try multiple browsers")
-  flagSet.BoolVarP(&options.failWhenNotFound, "permitNotFound", "p", true, "Don't fail with exit status 1 when cookies aren't found")
   flagSet.BoolVarP(&options.verbose, "verbose", "v", false, "enables logging to stderr")
 
   err := flagSet.Parse(os.Args[1:])
