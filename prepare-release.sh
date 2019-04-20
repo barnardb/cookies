@@ -12,10 +12,9 @@ set -x
 
 tag="v$1"
 
-export GO111MODULE=on
 export GOOS=darwin
 export GOARCH=amd64
-go build
+./build.sh
 archive="cookies_${tag}_${GOOS}_${GOARCH}.gz"
 gzip --stdout cookies >"${archive}"
 hub release create -d -a "${archive}" -m "${tag}" "${tag}"
