@@ -15,15 +15,14 @@ filter for cookies that match a URL, and provide a command-line interface.
 [zellyn/kookie #5]: https://github.com/zellyn/kooky/pull/5
 
 
-Status
-------
+Installing
+----------
 
-The code is working on my MacOS 10.14.4 Mojave system,
-though with an issue related to reading Safari cookies (see [zellyn/kooky #7]).
-Paths to cookie files are currently MacOS-specific, but could easily be made OS-dependent.
-Pull requests are welcome.
+On MacOS with Homebrew:
 
-[zellyn/kooky #7]: https://github.com/zellyn/kooky/issues/7
+```bash
+brew install barnardb/cookies/cookies
+```
 
 
 Usage
@@ -31,7 +30,7 @@ Usage
 
 As explained by `cookies --help`:
 ```text
-usage: ./cookies [options…] <URL>
+usage: cookies [options…] <URL>
 
 The following options are available:
   -a, --accept-missing        don't fail with exit status 1 when cookies aren't found
@@ -82,3 +81,26 @@ Host: www.example.com
 User-Agent: HTTPie/1.0.2
 ```
 
+
+Status
+------
+
+The code is working on my MacOS 10.14.4 Mojave system,
+though with an issue related to reading Safari cookies (see [zellyn/kooky #7]).
+Paths to cookie files are currently MacOS-specific, but could easily be made OS-dependent.
+Pull requests are welcome.
+
+[zellyn/kooky #7]: https://github.com/zellyn/kooky/issues/7
+
+
+Building
+--------
+
+Requires [Go](https://golang.org/). Known to work with version `go1.12.4`.
+
+Check out the repository and run
+```bash
+./build.sh
+```
+
+This produces a `cookies` executable.
