@@ -1,7 +1,7 @@
 module github.com/barnardb/cookies
 
 require (
-	github.com/barnardb/kooky v0.0.0-20190420082209-c58c0ed851b3
+	github.com/barnardb/kooky v0.0.0-20190421003720-9117b6c656ce
 	github.com/go-sqlite/sqlite3 v0.0.0-20180313105335-53dd8e640ee7 // indirect
 	github.com/godbus/dbus v4.1.0+incompatible // indirect
 	github.com/gonuts/binary v0.2.0 // indirect
