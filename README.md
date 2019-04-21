@@ -1,7 +1,7 @@
 Cookies
 =======
 
-Extracts cookies from Chrome's cookie database,
+Extracts cookies from the users Chrome, Firefox or Safari cookie database,
 outputting them in a format appropriate for use in the HTTP `Cookie` header.
 This is useful in some scripting situations.
 
