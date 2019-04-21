@@ -15,6 +15,14 @@ filter for cookies that match a URL, and provide a command-line interface.
 [zellyn/kooky #5]: https://github.com/zellyn/kooky/pull/5
 
 
+- [Installing](#installing)
+- [Usage](#usage)
+    - [cURL Example](#curl-example)
+    - [HTTPie Example](#httpie-example)
+- [Status](#status)
+- [Building](#building)
+
+
 Installing
 ----------
 
