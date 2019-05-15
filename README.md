@@ -6,13 +6,10 @@ outputting them in a format appropriate for use in the HTTP `Cookie` header.
 This is useful in some scripting situations.
 
 This core cookie reading code is provided by the [zellyn/kooky] cookie extraction library
-(currently using a [fork] that merges [zellyn/kooky #5] to support newer Firefox databases).
 This project wraps that library with some code to abstract browser differences away,
 filter for cookies that match a URL, and provide a command-line interface.
 
 [zellyn/kooky]: https://github.com/zellyn/kooky
-[fork]: https://github.com/barnardb/kooky
-[zellyn/kooky #5]: https://github.com/zellyn/kooky/pull/5
 
 
 - [Installing](#installing)

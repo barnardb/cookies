@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/barnardb/kooky"
+	"github.com/zellyn/kooky"
 	"log"
 	"net/url"
 	"strings"

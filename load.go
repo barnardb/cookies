@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/barnardb/kooky"
+	"github.com/zellyn/kooky"
 	"os/user"
 	"path/filepath"
 	"strings"
