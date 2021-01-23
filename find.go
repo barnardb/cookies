@@ -59,21 +59,28 @@ func filterCookies(cookies []*kooky.Cookie, url *url.URL, logger *log.Logger) []
 	now := time.Now()
 	logger.Printf("Current time is %v", now)
 	for _, cookie := range cookies {
-		if !hostMatchesDomain(url.Host, cookie.Domain) {
-			logger.Printf("Rejecting cookie for non-matching domain: %v", cookie)
-		} else if url.Scheme != "https" && cookie.Secure {
-			logger.Printf("Rejecting secure cookie for non-HTTPS URL: %v", cookie)
-		} else if !cookie.Expires.IsZero() && cookie.Expires.Before(now) {
-			logger.Printf("Rejecting expired cookie: %v", cookie)
-		} else if url.Path != "" && !strings.HasPrefix(url.Path, cookie.Path) {
-			logger.Printf("Rejecting cookie due to unmatched path: %v", cookie)
-		} else {
-			logger.Printf("Accepting: %v", cookie)
+		if cookieAppliesToURL(cookie, url, now, logger) {
 			filtered = append(filtered, cookie)
 		}
 	}
 	logger.Printf("Accepted %d of %d cookies", len(filtered), len(cookies))
 	return filtered
+}
+
+func cookieAppliesToURL(cookie *kooky.Cookie, url *url.URL, now time.Time, logger *log.Logger) bool {
+	if !hostMatchesDomain(url.Host, cookie.Domain) {
+		logger.Printf("Rejecting cookie for non-matching domain: %v", cookie)
+	} else if url.Scheme != "https" && cookie.Secure {
+		logger.Printf("Rejecting secure cookie for non-HTTPS URL: %v", cookie)
+	} else if !cookie.Expires.IsZero() && cookie.Expires.Before(now) {
+		logger.Printf("Rejecting expired cookie: %v", cookie)
+	} else if url.Path != "" && !strings.HasPrefix(url.Path, cookie.Path) {
+		logger.Printf("Rejecting cookie due to unmatched path: %v", cookie)
+	} else {
+		logger.Printf("Accepting: %v", cookie)
+		return true
+	}
+	return false
 }
 
 func hostMatchesDomain(host string, domain string) bool {
