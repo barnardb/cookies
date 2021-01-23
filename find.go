@@ -11,6 +11,11 @@ import (
 )
 
 func storesForBrowsers(names []string) []kooky.CookieStore {
+	// kooky doesn't currently expose its CookieStoreFinder implementations,
+	// so we have to filter the stores after running the finders,
+	// rather than being able to select only the finders we're interested.
+	// (kooky currently supports selecting which finders to use based on what
+	// modules are imported, which doesn't meet our use case.)
 	stores := kooky.FindAllCookieStores()
 	if names == nil {
 		return stores
@@ -36,14 +41,15 @@ func findCookies(url *url.URL, browsers []string, logger *log.Logger) (cookies [
 	stores := storesForBrowsers(browsers)
 	logger.Printf("Found %v cookie stores", len(stores))
 
+	filter := currentlyAppliesToURL(url, logger)
 	for _, store := range stores {
 		logger.Printf("Loading cookies from %v", store)
-		cookies, err := store.ReadCookies()
+		cookies, err := store.ReadCookies(filter)
 		if err != nil {
 			logger.Printf("Error loading cookies from %v: %s", store, err)
 			continue
 		}
-		cookies = filterCookies(cookies, url, logger)
+		logger.Printf("Found %d matching cookies", len(cookies))
 
 		if len(cookies) > 0 {
 			return cookies
@@ -53,19 +59,6 @@ func findCookies(url *url.URL, browsers []string, logger *log.Logger) (cookies [
 	return []*kooky.Cookie{}
 }
 
-func filterCookies(cookies []*kooky.Cookie, url *url.URL, logger *log.Logger) []*kooky.Cookie {
-	logger.Printf("Filtering %d cookies", len(cookies))
-	filtered := []*kooky.Cookie{}
-	filter := currentlyAppliesToURL(url, logger)
-	for _, cookie := range cookies {
-		if filter(cookie) {
-			filtered = append(filtered, cookie)
-		}
-	}
-	logger.Printf("Accepted %d of %d cookies", len(filtered), len(cookies))
-	return filtered
-}
-
 func currentlyAppliesToURL(url *url.URL, logger *log.Logger) kooky.Filter {
 	currentTime := time.Now()
 	logger.Printf("Current time is %v", currentTime)
@@ -73,11 +66,11 @@ func currentlyAppliesToURL(url *url.URL, logger *log.Logger) kooky.Filter {
 }
 
 func appliesToURLAtTime(url *url.URL, time time.Time, logger *log.Logger) kooky.Filter {
-	isHttps := url.Scheme != "https"
+	urlIsNotSecure := url.Scheme != "https"
 	return func(cookie *kooky.Cookie) bool {
 		if !hostMatchesDomain(url.Host, cookie.Domain) {
 			logger.Printf("Rejecting cookie for non-matching domain: %v", cookie)
-		} else if isHttps && cookie.Secure {
+		} else if urlIsNotSecure && cookie.Secure {
 			logger.Printf("Rejecting secure cookie for non-HTTPS URL: %v", cookie)
 		} else if !(cookie.Expires.IsZero() || time.Before(cookie.Expires)) {
 			logger.Printf("Rejecting expired cookie: %v", cookie)
