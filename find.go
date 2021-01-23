@@ -1,27 +1,46 @@
 package main
 
 import (
-	"github.com/zellyn/kooky"
 	"log"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/zellyn/kooky"
+	_ "github.com/zellyn/kooky/allbrowsers"
 )
+
+func storesForBrowsers(names []string) []kooky.CookieStore {
+	stores := kooky.FindAllCookieStores()
+	if names == nil {
+		return stores
+	}
+	n := 0
+STORES:
+	for _, store := range stores {
+		browser := store.Browser()
+		for _, name := range names {
+			if browser == name {
+				stores[n] = store
+				n++
+				continue STORES
+			}
+		}
+	}
+	return stores[:n]
+}
 
 func findCookies(url *url.URL, browsers []string, logger *log.Logger) (cookies []*kooky.Cookie) {
 	logger.Printf("Looking for cookies for URL %s", url)
 
-	for _, browser := range browsers {
-		loader, err := getCookieLoader(browser)
-		if err != nil {
-			logger.Printf("Error getting cookie loader for %s: %s", browser, err)
-			continue
-		}
+	stores := storesForBrowsers(browsers)
+	logger.Printf("Found %v cookie stores", len(stores))
 
-		logger.Printf("Loading cookies from %s", browser)
-		cookies, err := loader(url.Host)
+	for _, store := range stores {
+		logger.Printf("Loading cookies from %v", store)
+		cookies, err := store.ReadCookies()
 		if err != nil {
-			logger.Printf("Error loading cookies from %s: %s", browser, err)
+			logger.Printf("Error loading cookies from %v: %s", store, err)
 			continue
 		}
 		cookies = filterCookies(cookies, url, logger)
