@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/barnardb/kooky"
 	flag "github.com/spf13/pflag"
-	"github.com/zellyn/kooky"
 )
 
 type options struct {

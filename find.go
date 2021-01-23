@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zellyn/kooky"
-	_ "github.com/zellyn/kooky/allbrowsers"
+	"github.com/barnardb/kooky"
+	_ "github.com/barnardb/kooky/allbrowsers"
 )
 
 func storesForBrowsers(names []string) []kooky.CookieStore {
