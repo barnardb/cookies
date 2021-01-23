@@ -43,16 +43,18 @@ func main() {
 func parseCommandLine() (options options) {
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 
+	usage := func(output io.Writer) {
+		fmt.Fprintf(output, "usage: %s [options…] <URL> [<cookie-name>]\n\nThe following options are available:\n", os.Args[0])
+		fmt.Fprint(output, flagSet.FlagUsages())
+	}
+
 	fatalError := func(error ...interface{}) {
 		fmt.Fprintln(os.Stderr, error...)
-		flagSet.Usage()
+		usage(os.Stderr)
 		os.Exit(2)
 	}
 
-	flagSet.Usage = func() {
-		fmt.Fprintf(os.Stderr, "usage: %s [options…] <URL> [<cookie-name>]\n\nThe following options are available:\n", os.Args[0])
-		flagSet.PrintDefaults()
-	}
+	flagSet.Usage = func() { usage(os.Stdout) }
 
 	flagSet.BoolVarP(&options.acceptMissing, "accept-missing", "a", false, "don't fail with exit status 1 when cookies aren't found")
 	flagSet.StringArrayVarP(&options.browsers, "browser", "b", []string{"chrome", "chromium", "firefox", "safari"}, "browser to try extracting a cookie from, can be repeated to try multiple browsers")
