@@ -6,8 +6,9 @@ import (
 	"log"
 	"net/url"
 	"os"
+
+	flag "github.com/spf13/pflag"
 )
-import flag "github.com/spf13/pflag"
 
 type options struct {
 	browsers      []string
@@ -47,7 +48,7 @@ func parseCommandLine() (options options) {
 	}
 
 	flagSet.BoolVarP(&options.acceptMissing, "accept-missing", "a", false, "don't fail with exit status 1 when cookies aren't found")
-	flagSet.StringArrayVarP(&options.browsers, "browser", "b", []string{"chrome", "firefox", "safari"}, "browser to try extracting a cookie from, can be repeated to try multiple browsers")
+	flagSet.StringArrayVarP(&options.browsers, "browser", "b", []string{"chrome", "chromium", "firefox", "safari"}, "browser to try extracting a cookie from, can be repeated to try multiple browsers")
 	flagSet.BoolVarP(&options.verbose, "verbose", "v", false, "enables logging to stderr")
 
 	err := flagSet.Parse(os.Args[1:])
