@@ -99,9 +99,9 @@ User-Agent: HTTPie/1.0.2
 Status
 ------
 
-The code is working on my MacOS 10.14.4 Mojave system,
-though with an issue related to reading Safari cookies (see [zellyn/kooky #7]).
-Paths to cookie files are currently MacOS-specific, but could easily be made OS-dependent.
+I use this tool on multiple MacOS systems.
+(Note that there is a permissions issue you will have to deal with if you want to read Safari cookies: [zellyn/kooky #7].)
+It should also work on other systems.
 Pull requests are welcome.
 
 [zellyn/kooky #7]: https://github.com/zellyn/kooky/issues/7
