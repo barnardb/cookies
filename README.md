@@ -35,21 +35,30 @@ Usage
 
 As explained by `cookies --help`:
 ```text
-usage: cookies [options…] <URL>
+usage: cookies [options…] <URL> [<cookie-name>]
 
 The following options are available:
   -a, --accept-missing        don't fail with exit status 1 when cookies aren't found
-  -b, --browser stringArray   browser to try extracting a cookie from, can be repeated to try multiple browsers (default [chrome,firefox,safari])
+  -b, --browser stringArray   browser to try extracting a cookie from, can be repeated to try multiple browsers (default [chrome,chromium,firefox,safari])
   -v, --verbose               enables logging to stderr
 ```
 
-So for example:
+So you get all cookies for a URL, so e.g. this:
 ```bash
 cookies http://www.example.com
 ``` 
 might yield
 ```
 some.random.value=1234;JSESSIONID=0123456789ABCDEF0123456789ABCDEF;another_cookie:example-cookie-value
+```
+
+Or you can get a particular cookie value, so e.g. this:
+```bash
+cookies http://www.example.com JSESSIONID
+``` 
+might yield
+```
+0123456789ABCDEF0123456789ABCDEF
 ```
 
 ### cURL example
@@ -101,11 +110,11 @@ Pull requests are welcome.
 Building
 --------
 
-Requires [Go](https://golang.org/). Known to work with version `go1.12.4`.
+Requires [Go](https://golang.org/). Known to work with version `go1.15.6`.
 
 Check out the repository and run
 ```bash
-./build.sh
+go build
 ```
 
 This produces a `cookies` executable.
