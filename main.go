@@ -2,17 +2,20 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
 
 	flag "github.com/spf13/pflag"
+	"github.com/zellyn/kooky"
 )
 
 type options struct {
 	browsers      []string
 	url           *url.URL
+	name          string
 	acceptMissing bool
 	verbose       bool
 }
@@ -21,7 +24,7 @@ func main() {
 	options := parseCommandLine()
 	logger := buildLogger(options.verbose)
 
-	cookies := findCookies(options.url, options.browsers, logger)
+	cookies := findCookies(options.url, options.name, options.browsers, logger)
 	if len(cookies) == 0 {
 		if !options.acceptMissing {
 			os.Exit(1)
@@ -29,7 +32,11 @@ func main() {
 		return
 	}
 
-	formatCookies(os.Stdout, cookies)
+	if len(options.name) == 0 {
+		formatCookies(os.Stdout, cookies)
+	} else {
+		writeStrongestValue(os.Stdout, cookies)
+	}
 	fmt.Print("\n")
 }
 
@@ -43,7 +50,7 @@ func parseCommandLine() (options options) {
 	}
 
 	flagSet.Usage = func() {
-		fmt.Fprintf(os.Stderr, "usage: %s [options…] <URL>\n\nThe following options are available:\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "usage: %s [options…] <URL> [<cookie-name>]\n\nThe following options are available:\n", os.Args[0])
 		flagSet.PrintDefaults()
 	}
 
@@ -59,8 +66,8 @@ func parseCommandLine() (options options) {
 		fatalError(err)
 	}
 
-	if flagSet.NArg() != 1 {
-		fatalError("error: expected 1 argument but got", flag.NArg())
+	if flagSet.NArg() != 1 && flagSet.NArg() != 2 {
+		fatalError("error: expected 1 or 2 arguments but got", flag.NArg())
 	}
 
 	options.url, err = url.Parse(flagSet.Arg(0))
@@ -72,6 +79,10 @@ func parseCommandLine() (options options) {
 		fatalError("URL host must be non-empty")
 	}
 
+	if flagSet.NArg() > 1 {
+		options.name = flagSet.Arg(1)
+	}
+
 	return
 }
 
@@ -81,4 +92,16 @@ func buildLogger(verbose bool) *log.Logger {
 		w = os.Stderr
 	}
 	return log.New(w, "", 0)
+}
+
+func writeStrongestValue(w io.Writer, cookies []*kooky.Cookie) {
+	strongest := cookies[0]
+	for _, cookie := range cookies[1:] {
+		if len(cookie.Domain) > len(strongest.Domain) || (cookie.Domain == strongest.Domain &&
+			(len(cookie.Path) > len(strongest.Path) || (cookie.Path == strongest.Path &&
+				cookie.Creation.After(strongest.Creation)))) {
+			strongest = cookie
+		}
+	}
+	fmt.Print(strongest.Value)
 }

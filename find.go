@@ -35,13 +35,13 @@ STORES:
 	return stores[:n]
 }
 
-func findCookies(url *url.URL, browsers []string, logger *log.Logger) (cookies []*kooky.Cookie) {
+func findCookies(url *url.URL, name string, browsers []string, logger *log.Logger) (cookies []*kooky.Cookie) {
 	logger.Printf("Looking for cookies for URL %s", url)
 
 	stores := storesForBrowsers(browsers)
 	logger.Printf("Found %v cookie stores", len(stores))
 
-	filter := currentlyAppliesToURL(url, logger)
+	filter := currentlyAppliesToURLAndName(url, name, logger)
 	for _, store := range stores {
 		logger.Printf("Loading cookies from %v", store)
 		cookies, err := store.ReadCookies(filter)
@@ -59,13 +59,13 @@ func findCookies(url *url.URL, browsers []string, logger *log.Logger) (cookies [
 	return []*kooky.Cookie{}
 }
 
-func currentlyAppliesToURL(url *url.URL, logger *log.Logger) kooky.Filter {
+func currentlyAppliesToURLAndName(url *url.URL, name string, logger *log.Logger) kooky.Filter {
 	currentTime := time.Now()
 	logger.Printf("Current time is %v", currentTime)
-	return appliesToURLAtTime(url, currentTime, logger)
+	return appliesToURLAndNameAtTime(url, name, currentTime, logger)
 }
 
-func appliesToURLAtTime(url *url.URL, time time.Time, logger *log.Logger) kooky.Filter {
+func appliesToURLAndNameAtTime(url *url.URL, name string, time time.Time, logger *log.Logger) kooky.Filter {
 	urlIsNotSecure := url.Scheme != "https"
 	return func(cookie *kooky.Cookie) bool {
 		if !hostMatchesDomain(url.Host, cookie.Domain) {
@@ -76,6 +76,8 @@ func appliesToURLAtTime(url *url.URL, time time.Time, logger *log.Logger) kooky.
 			logger.Printf("Rejecting expired cookie: %v", cookie)
 		} else if url.Path != "" && !strings.HasPrefix(url.Path, cookie.Path) {
 			logger.Printf("Rejecting cookie due to unmatched path: %v", cookie)
+		} else if name != "" && cookie.Name != name {
+			logger.Printf("Rejecting cookie due to unmatched name: %v", cookie)
 		} else {
 			logger.Printf("Accepting: %v", cookie)
 			return true
