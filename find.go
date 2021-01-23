@@ -40,7 +40,7 @@ func filterCookies(cookies []*kooky.Cookie, url *url.URL, logger *log.Logger) []
 	now := time.Now()
 	logger.Printf("Current time is %v", now)
 	for _, cookie := range cookies {
-		if cookie.Domain != url.Host {
+		if !hostMatchesDomain(url.Host, cookie.Domain) {
 			logger.Printf("Rejecting cookie for non-matching domain: %v", cookie)
 		} else if url.Scheme != "https" && cookie.Secure {
 			logger.Printf("Rejecting secure cookie for non-HTTPS URL: %v", cookie)
@@ -55,4 +55,9 @@ func filterCookies(cookies []*kooky.Cookie, url *url.URL, logger *log.Logger) []
 	}
 	logger.Printf("Accepted %d of %d cookies", len(filtered), len(cookies))
 	return filtered
+}
+
+func hostMatchesDomain(host string, domain string) bool {
+	return host == domain ||
+		(strings.HasPrefix(domain, ".") && (strings.HasSuffix(host, domain) || host == domain[1:]))
 }
