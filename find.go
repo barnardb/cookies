@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -35,13 +34,13 @@ STORES:
 	return stores[:n]
 }
 
-func findCookies(url *url.URL, name string, browsers []string, logger *log.Logger) (cookies []*kooky.Cookie) {
+func findCookies(url *url.URL, name string, browsers []string, logger *Logger) (cookies []*kooky.Cookie) {
 	logger.Printf("Looking for cookies for URL %s", url)
 
 	stores := storesForBrowsers(browsers)
-	logger.Printf("Found %v cookie stores", len(stores))
+	logger.Printf("Found %v cookie store(s)", len(stores))
 
-	filter := currentlyAppliesToURLAndName(url, name, logger)
+	filter := currentlyAppliesToURLAndName(url, name, logger.RequireVerbosity(2))
 	for _, store := range stores {
 		logger.Printf("Loading cookies from %v", store)
 		cookies, err := store.ReadCookies(filter)
@@ -49,7 +48,7 @@ func findCookies(url *url.URL, name string, browsers []string, logger *log.Logge
 			logger.Printf("Error loading cookies from %v: %s", store, err)
 			continue
 		}
-		logger.Printf("Found %d matching cookies", len(cookies))
+		logger.Printf("Found %d matching cookie(s)", len(cookies))
 
 		if len(cookies) > 0 {
 			return cookies
@@ -59,13 +58,13 @@ func findCookies(url *url.URL, name string, browsers []string, logger *log.Logge
 	return []*kooky.Cookie{}
 }
 
-func currentlyAppliesToURLAndName(url *url.URL, name string, logger *log.Logger) kooky.Filter {
+func currentlyAppliesToURLAndName(url *url.URL, name string, logger *Logger) kooky.Filter {
 	currentTime := time.Now()
 	logger.Printf("Current time is %v", currentTime)
 	return appliesToURLAndNameAtTime(url, name, currentTime, logger)
 }
 
-func appliesToURLAndNameAtTime(url *url.URL, name string, time time.Time, logger *log.Logger) kooky.Filter {
+func appliesToURLAndNameAtTime(url *url.URL, name string, time time.Time, logger *Logger) kooky.Filter {
 	urlIsNotSecure := url.Scheme != "https"
 	return func(cookie *kooky.Cookie) bool {
 		if !hostMatchesDomain(url.Host, cookie.Domain) {

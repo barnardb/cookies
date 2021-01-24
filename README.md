@@ -42,7 +42,7 @@ usage: cookies [options…] <URL> [<cookie-name>]
 The following options are available:
   -a, --accept-missing        don't fail with exit status 1 when cookies aren't found
   -b, --browser stringArray   browser to try extracting a cookie from, can be repeated to try multiple browsers (default [chrome,chromium,firefox,safari])
-  -v, --verbose               enables logging to stderr
+  -v, --verbose[=level]       enables logging to stderr; specify it twice or provide level 2 to get per-cookie details (`-vv` or `--verbose=2`)
 ```
 
 So you get all cookies for a URL, so e.g. this:

@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"net/url"
 	"os"
+	"regexp"
 
 	flag "github.com/spf13/pflag"
 	"github.com/zellyn/kooky"
@@ -17,12 +16,12 @@ type options struct {
 	url           *url.URL
 	name          string
 	acceptMissing bool
-	verbose       bool
+	verbosity     int
 }
 
 func main() {
 	options := parseCommandLine()
-	logger := buildLogger(options.verbose)
+	logger := LoggerWithVerbosity(options.verbosity)
 
 	cookies := findCookies(options.url, options.name, options.browsers, logger)
 	if len(cookies) == 0 {
@@ -45,7 +44,7 @@ func parseCommandLine() (options options) {
 
 	usage := func(output io.Writer) {
 		fmt.Fprintf(output, "usage: %s [options…] <URL> [<cookie-name>]\n\nThe following options are available:\n", os.Args[0])
-		fmt.Fprint(output, flagSet.FlagUsages())
+		fmt.Fprint(output, regexp.MustCompile(`--verbose level  `).ReplaceAllString(flagSet.FlagUsages(), `--verbose[=level]`))
 	}
 
 	fatalError := func(error ...interface{}) {
@@ -58,7 +57,7 @@ func parseCommandLine() (options options) {
 
 	flagSet.BoolVarP(&options.acceptMissing, "accept-missing", "a", false, "don't fail with exit status 1 when cookies aren't found")
 	flagSet.StringArrayVarP(&options.browsers, "browser", "b", []string{"chrome", "chromium", "firefox", "safari"}, "browser to try extracting a cookie from, can be repeated to try multiple browsers")
-	flagSet.BoolVarP(&options.verbose, "verbose", "v", false, "enables logging to stderr")
+	flagSet.CountVarP(&options.verbosity, "verbose", "v", "enables logging to stderr; specify it twice or provide `level` 2 to get per-cookie details (`-vv` or `--verbose=2`)")
 
 	err := flagSet.Parse(os.Args[1:])
 	if err != nil {
@@ -86,14 +85,6 @@ func parseCommandLine() (options options) {
 	}
 
 	return
-}
-
-func buildLogger(verbose bool) *log.Logger {
-	w := ioutil.Discard
-	if verbose {
-		w = os.Stderr
-	}
-	return log.New(w, "", 0)
 }
 
 func writeStrongestValue(w io.Writer, cookies []*kooky.Cookie) {
