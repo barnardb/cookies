@@ -5,9 +5,10 @@ Extracts cookies from the users Chrome, Firefox or Safari cookie database,
 outputting them in a format appropriate for use in the HTTP `Cookie` header.
 This is useful in some scripting situations.
 
-This core cookie reading code is provided by the [zellyn/kooky] cookie extraction library
-This project wraps that library with some code to abstract browser differences away,
-filter for cookies that match a URL, and provide a command-line interface.
+This core cookie reading code is provided by the [zellyn/kooky] cookie extraction library.
+This `cookies` tool provides a command-line interface to that library that
+allows you to select which browser cookie databases to use and filter for all
+or a particular cookie that are relevant for a given URL.
 
 [zellyn/kooky]: https://github.com/zellyn/kooky
 
@@ -18,6 +19,7 @@ filter for cookies that match a URL, and provide a command-line interface.
     - [HTTPie Example](#httpie-example)
 - [Status](#status)
 - [Building](#building)
+- [Releasing](#releasing)
 
 
 Installing
@@ -99,22 +101,38 @@ User-Agent: HTTPie/1.0.2
 Status
 ------
 
-I use this tool on multiple MacOS systems.
-(Note that there is a permissions issue you will have to deal with if you want to read Safari cookies: [zellyn/kooky #7].)
-It should also work on other systems.
-Pull requests are welcome.
+I use this tool for day-to-day tasks on multiple MacOS systems.
+(Note that there is a cookie database permission issue you will have to deal with if you want to read Safari cookies: [zellyn/kooky #7].)
 
 [zellyn/kooky #7]: https://github.com/zellyn/kooky/issues/7
+
+As the library is essentially a wrapper around [zellyn/kooky] and the library
+supports other platforms as well, this tool should also work on other platforms.
+
+Pull requests are welcome.
 
 
 Building
 --------
 
-Requires [Go](https://golang.org/). Known to work with version `go1.15.6`.
+Requires [Go](https://golang.org/).
+Known to work with version `go1.15.6`.
 
-Check out the repository and run
+To build the code, check out the repository and run:
 ```bash
 go build
 ```
 
 This produces a `cookies` executable.
+
+
+Releasing
+---------
+
+Releases are prepared by running:
+```bash
+./prepare-release.sh "${version}"
+```
+`${version}` should be a semantic version number in the "0.0.0" format.
+This tags the release (e.g. as "v0.0.0") and creates a draft release in GitHub,
+which can be given release notes and published.
