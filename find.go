@@ -9,53 +9,54 @@ import (
 	_ "github.com/zellyn/kooky/allbrowsers"
 )
 
-func storesForBrowsers(names []string) []kooky.CookieStore {
-	// kooky doesn't currently expose its CookieStoreFinder implementations,
-	// so we have to filter the stores after running the finders,
-	// rather than being able to select only the finders we're interested.
-	// (kooky currently supports selecting which finders to use based on what
-	// modules are imported, which doesn't meet our use case.)
-	stores := kooky.FindAllCookieStores()
-	if names == nil {
-		return stores
-	}
-	n := 0
-STORES:
-	for _, store := range stores {
-		browser := store.Browser()
-		for _, name := range names {
-			if browser == name {
-				stores[n] = store
-				n++
-				continue STORES
-			}
+func contains(values []string, value string) bool {
+	for _, v := range values {
+		if v == value {
+			return true
 		}
 	}
-	return stores[:n]
+	return false
 }
 
-func findCookies(url *url.URL, name string, browsers []string, logger *Logger) (cookies []*kooky.Cookie) {
+func findCookies(url *url.URL, name string, browsers []string, logger *Logger) (results []*kooky.Cookie) {
+	logger.Printf("Looking for browsers %v", browsers)
 	logger.Printf("Looking for cookies for URL %s", url)
-
-	stores := storesForBrowsers(browsers)
-	logger.Printf("Found %v cookie store(s)", len(stores))
-
 	filter := currentlyAppliesToURLAndName(url, name, logger.RequireVerbosity(2))
-	for _, store := range stores {
-		logger.Printf("Loading cookies from %v", store)
-		cookies, err := store.ReadCookies(filter)
-		if err != nil {
-			logger.Printf("Error loading cookies from %v: %s", store, err)
-			continue
-		}
-		logger.Printf("Found %d matching cookie(s)", len(cookies))
 
-		if len(cookies) > 0 {
-			return cookies
-		}
+	cookies := make(chan *kooky.Cookie)
+	go func() {
+		kooky.ConcurrentlyVisitFinders(func(name string, finder kooky.CookieStoreFinder) {
+			if !contains(browsers, name) {
+				return
+			}
+			logger.Printf("Looking for %s cookie stores", name)
+			kooky.ConcurrentlyVisitStores(finder, func(store kooky.CookieStore) {
+				logger.Printf("Loading cookies from %v", store)
+				err := store.VisitCookies(func(cookie *kooky.Cookie, initializeValue kooky.CookieValueInitializer) error {
+					if !filter(cookie) {
+						return nil
+					}
+					err := initializeValue(cookie)
+					if err == nil {
+						cookies <- cookie
+					}
+					return err
+				})
+				if err != nil {
+					logger.Printf("Error loading cookies from %v: %s", store, err)
+				} else {
+					logger.Printf("Done loading cookies from %v", store)
+				}
+			})
+			logger.Printf("Done loading from %s cookie stores", name)
+		})
+		close(cookies)
+	}()
+	for cookie := range cookies {
+		results = append(results, cookie)
 	}
-
-	return []*kooky.Cookie{}
+	logger.Printf("Found %d matching cookie(s)", len(results))
+	return
 }
 
 func currentlyAppliesToURLAndName(url *url.URL, name string, logger *Logger) kooky.Filter {
