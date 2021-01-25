@@ -29,6 +29,5 @@ func (l *Logger) Printf(format string, a ...interface{}) {
 	if l == nil {
 		return
 	}
-	fmt.Fprintf(l.writer, format, a...)
-	l.writer.Write([]byte("\n"))
+	fmt.Fprintf(l.writer, string(append([]byte(format), 0x0a)), a...)
 }
