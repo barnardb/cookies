@@ -1,11 +1,12 @@
 Cookies
 =======
 
-Extracts cookies from the users Chrome, Firefox or Safari cookie database,
-outputting them in a format appropriate for use in the HTTP `Cookie` header.
-This is useful in some scripting situations.
+Extracts cookies from the user's Chrome, Chromium, Firefox or Safari cookie database.
+A single cookie value can be retrieved, or all cookies applicable to given URL
+can be retrieved and output in a format appropriate for use in the HTTP `Cookie` header.
+Both of these usages are useful for scripting purposes.
 
-This core cookie reading code is provided by the [zellyn/kooky] cookie extraction library.
+The core cookie reading code is provided by the [zellyn/kooky] cookie extraction library.
 This `cookies` tool provides a command-line interface to that library that
 allows you to select which browser cookie databases to use and filter for all
 or a particular cookie that are relevant for a given URL.
@@ -31,6 +32,8 @@ On MacOS with Homebrew:
 brew install barnardb/cookies/cookies
 ```
 
+Alternatively, or on other platforms, follow the instructions below for [building](#building) an executable.
+
 
 Usage
 -----
@@ -45,7 +48,8 @@ The following options are available:
   -v, --verbose[=level]       enables logging to stderr; specify it twice or provide level 2 to get per-cookie details (`-vv` or `--verbose=2`)
 ```
 
-So you get all cookies for a URL, so e.g. this:
+To get all cookies relevant to a URL in the format expected by the `Cookie` header,
+provide the URL as an argument. E.g., running
 ```bash
 cookies http://www.example.com
 ``` 
@@ -54,7 +58,8 @@ might yield
 some.random.value=1234;JSESSIONID=0123456789ABCDEF0123456789ABCDEF;another_cookie:example-cookie-value
 ```
 
-Or you can get a particular cookie value, so e.g. this:
+Or you can get just the value of a particular cookie by providing both a URL and a cookie name.
+E.g. running
 ```bash
 cookies http://www.example.com JSESSIONID
 ``` 
@@ -136,3 +141,9 @@ Releases are prepared by running:
 `${version}` should be a semantic version number in the "0.0.0" format.
 This tags the release (e.g. as "v0.0.0") and creates a draft release in GitHub,
 which can be given release notes and published.
+
+Once the new release it published to GitHub, the homebrew formula in
+[barnardb/homebrew-cookies] should be updated following the instructions in
+that repo's README.
+
+[barnardb/homebrew-cookies]: https://github.com/barnardb/homebrew-cookies
