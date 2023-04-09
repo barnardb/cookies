@@ -18,4 +18,4 @@ export GOARCH=amd64
 ./build.sh "${version}"
 archive="cookies_${tag}_${GOOS}_${GOARCH}.gz"
 gzip --stdout cookies >"${archive}"
-hub release create -d -a "${archive}" -m "${tag}" "${tag}"
+gh release create --draft --generate-notes "${tag}" "${archive}"
