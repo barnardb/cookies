@@ -10,11 +10,12 @@ cd "$(dirname "$0")"
 
 set -x
 
-tag="v$1"
+version="$1"
+tag="v${version}"
 
 export GOOS=darwin
 export GOARCH=amd64
-go build
+./build.sh "${version}"
 archive="cookies_${tag}_${GOOS}_${GOARCH}.gz"
 gzip --stdout cookies >"${archive}"
 hub release create -d -a "${archive}" -m "${tag}" "${tag}"

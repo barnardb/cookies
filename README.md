@@ -40,19 +40,22 @@ Usage
 
 As explained by `cookies --help`:
 ```text
-usage: cookies [options…] <URL> [<cookie-name>]
+usage: ./cookies [options…] <URL> [<cookie-name>]
 
 The following options are available:
   -a, --accept-missing        don't fail with exit status 1 when cookies aren't found
   -b, --browser stringArray   browser to try extracting a cookie from, can be repeated to try multiple browsers (default [chrome,chromium,firefox,safari])
   -v, --verbose[=level]       enables logging to stderr; specify it twice or provide level 2 to get per-cookie details (`-vv` or `--verbose=2`)
+      --version               prints version information and exits
+
+cookies version 0.5.1  (https://github.com/barnardb/cookies)
 ```
 
 To get all cookies relevant to a URL in the format expected by the `Cookie` header,
 provide the URL as an argument. E.g., running
 ```bash
 cookies http://www.example.com
-``` 
+```
 might yield
 ```
 some.random.value=1234;JSESSIONID=0123456789ABCDEF0123456789ABCDEF;another_cookie:example-cookie-value
@@ -62,7 +65,7 @@ Or you can get just the value of a particular cookie by providing both a URL and
 E.g. running
 ```bash
 cookies http://www.example.com JSESSIONID
-``` 
+```
 might yield
 ```
 0123456789ABCDEF0123456789ABCDEF

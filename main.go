@@ -11,6 +11,9 @@ import (
 	"github.com/zellyn/kooky"
 )
 
+// Overridden by the linker at build time.
+var version string = "development"
+
 type options struct {
 	browsers      []string
 	url           *url.URL
@@ -45,6 +48,7 @@ func parseCommandLine() (options options) {
 	usage := func(output io.Writer) {
 		fmt.Fprintf(output, "usage: %s [options…] <URL> [<cookie-name>]\n\nThe following options are available:\n", os.Args[0])
 		fmt.Fprint(output, regexp.MustCompile(`--verbose level  `).ReplaceAllString(flagSet.FlagUsages(), `--verbose[=level]`))
+		fmt.Fprintf(output, "\ncookies version %s  (https://github.com/barnardb/cookies)\n", version)
 	}
 
 	fatalError := func(error ...interface{}) {
@@ -59,12 +63,19 @@ func parseCommandLine() (options options) {
 	flagSet.StringArrayVarP(&options.browsers, "browser", "b", []string{"chrome", "chromium", "firefox", "safari"}, "browser to try extracting a cookie from, can be repeated to try multiple browsers")
 	flagSet.CountVarP(&options.verbosity, "verbose", "v", "enables logging to stderr; specify it twice or provide `level` 2 to get per-cookie details (`-vv` or `--verbose=2`)")
 
+	versionFlag := flagSet.Bool("version", false, "prints version information and exits")
+
 	err := flagSet.Parse(os.Args[1:])
 	if err != nil {
 		if err == flag.ErrHelp {
 			os.Exit(0)
 		}
 		fatalError(err)
+	}
+
+	if *versionFlag {
+		fmt.Println(version)
+		os.Exit(0)
 	}
 
 	if flagSet.NArg() != 1 && flagSet.NArg() != 2 {
