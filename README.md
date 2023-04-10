@@ -6,7 +6,7 @@ A single cookie value can be retrieved, or all cookies applicable to given URL
 can be retrieved and output in a format appropriate for use in the HTTP `Cookie` header.
 Both of these usages are useful for scripting purposes.
 
-The core cookie reading code is provided by the [zellyn/kooky] cookie extraction library.
+The core cookie-reading code is provided by the [zellyn/kooky] cookie extraction library.
 This `cookies` tool provides a command-line interface to that library that
 allows you to select which browser cookie databases to use and filter for all
 or a particular cookie that are relevant for a given URL.
@@ -124,7 +124,6 @@ Building
 --------
 
 Requires [Go](https://golang.org/).
-Known to work with version `go1.15.6`.
 
 To build the code, check out the repository and run:
 ```bash
@@ -145,7 +144,7 @@ Releases are prepared by running:
 This tags the release (e.g. as "v0.0.0") and creates a draft release in GitHub,
 which can be given release notes and published.
 
-Once the new release it published to GitHub, the homebrew formula in
+Once the new release is published to GitHub, the homebrew formula in
 [barnardb/homebrew-cookies] should be updated following the instructions in
 that repo's README.
 
