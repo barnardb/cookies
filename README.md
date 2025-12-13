@@ -149,3 +149,18 @@ Once the new release is published to GitHub, the homebrew formula in
 that repo's README.
 
 [barnardb/homebrew-cookies]: https://github.com/barnardb/homebrew-cookies
+
+
+go build
+
+./cookies --browser chrome "https://www.youtube.com" -vv 
+./cookies --browser chromium "https://www.youtube.com" -vv
+./cookies --browser firefox "https://www.youtube.com" -vv
+
+./cookies --browser chrome "https://www.youtube.com" > cookie_chrome.txt
+./cookies --browser chromium "https://www.youtube.com" > cookie_chromium.txt
+./cookies --browser firefox "https://www.youtube.com" > cookie_firefox.txt
+
+python ./convert_netscape.py ./cookie_chrome.txt  ./cookie_chrome_netscape.txt 
+python ./convert_netscape.py ./cookie_chromium.txt  ./cookie_chromium_netscape.txt 
+python ./convert_netscape.py ./cookie_firefox.txt  ./cookie_firefox_netscape.txt 

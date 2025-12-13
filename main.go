@@ -7,6 +7,8 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/browserutils/kooky/browser/chromium"
+	"github.com/browserutils/kooky/browser/firefox"
 	flag "github.com/spf13/pflag"
 	"github.com/zellyn/kooky"
 )
@@ -25,6 +27,32 @@ type options struct {
 func main() {
 	options := parseCommandLine()
 	logger := LoggerWithVerbosity(options.verbosity)
+
+	// dir, _ := os.UserConfigDir()
+	dir, _ := os.UserHomeDir()
+	logger.Printf("Home Directory: %v", dir)
+
+	fixedBrowsers := []string{"chromium", "firefox"}
+	if len(options.browsers) == 1 && contains(fixedBrowsers, options.browsers[0]) {
+		cookiesFile := ""
+
+		if options.browsers[0] == "chromium" {
+			cookiesFile = dir + "/snap/chromium/common/chromium/Default/Cookies"
+			logger.Printf("Using optimized path for %s cookies file: %s", options.browsers[0], cookiesFile)
+			cookiesSeq := chromium.TraverseCookies(cookiesFile).OnlyCookies()
+			for cookie := range cookiesSeq {
+				fmt.Println(cookie)
+			}
+		} else if options.browsers[0] == "firefox" {
+			cookiesFile = dir + "/snap/firefox/common/.mozilla/firefox/7v8eltod.default/cookies.sqlite"
+			logger.Printf("Using optimized path for %s cookies file: %s", options.browsers[0], cookiesFile)
+			cookiesSeq := firefox.TraverseCookies(cookiesFile).OnlyCookies()
+			for cookie := range cookiesSeq {
+				fmt.Println(cookie)
+			}
+		}
+		logger.Printf("Using optimized path for %s cookies file: %s", options.browsers[0], cookiesFile)
+	}
 
 	cookies := findCookies(options.url, options.name, options.browsers, logger)
 	if len(cookies) == 0 {
