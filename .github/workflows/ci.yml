@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "These files need gofmt:" >&2
+            echo "$unformatted" >&2
+            exit 1
+          fi
+
+      - run: go vet ./...
+      - run: go test -race ./...
+
+      - name: Build with build.sh
+        run: ./build.sh 0.0.0
+
+      # Mirrors the checks in the Homebrew formula's test block.
+      - name: Smoke test
+        shell: bash
+        run: |
+          set -x
+          url=http://example.com/this/path/is/assumed/not-to-exist
+          [ "$(./cookies --version)" = "0.0.0" ]
+          help=$(./cookies --help)
+          [[ $help == *'usage: ./cookies [options…] <URL> [<cookie-name>]'* ]]
+          ! ./cookies "$url"
+          ./cookies --accept-missing "$url"
+          log=$(./cookies --verbose --accept-missing "$url" 2>&1 >/dev/null)
+          [[ $log == *"Looking for cookies for URL $url"* ]]
+
+  # Windows isn't officially supported, but it should keep compiling.
+  cross-compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [windows/amd64, windows/arm64, linux/arm64, darwin/amd64]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Build ${{ matrix.target }}
+        run: |
+          export GOOS=${TARGET%/*} GOARCH=${TARGET#*/} CGO_ENABLED=0
+          go build -o /dev/null .
+        env:
+          TARGET: ${{ matrix.target }}
