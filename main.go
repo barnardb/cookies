@@ -118,5 +118,5 @@ func writeStrongestValue(w io.Writer, cookies []*kooky.Cookie) {
 			strongest = cookie
 		}
 	}
-	fmt.Print(strongest.Value)
+	fmt.Fprint(w, strongest.Value)
 }

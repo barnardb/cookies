@@ -112,16 +112,21 @@ func currentlyAppliesToURLAndName(url *url.URL, name string, logger *Logger) koo
 
 func appliesToURLAndNameAtTime(url *url.URL, name string, time time.Time, logger *Logger) kooky.Filter {
 	urlIsNotSecure := url.Scheme != "https"
+	host := strings.ToLower(url.Hostname())
+	path := url.Path
+	if path == "" {
+		path = "/"
+	}
 	// A plain FilterFunc (not a ValueFilterFunc) lets kooky apply the filter before decrypting
 	// values, so we only touch the keychain for browsers that have a matching cookie.
 	return kooky.FilterFunc(func(cookie *kooky.Cookie) bool {
-		if !hostMatchesDomain(url.Host, cookie.Domain) {
+		if !hostMatchesDomain(host, cookie.Domain) {
 			logger.Printf("Rejecting cookie for non-matching domain: %v", cookie)
 		} else if urlIsNotSecure && cookie.Secure {
 			logger.Printf("Rejecting secure cookie for non-HTTPS URL: %v", cookie)
 		} else if !(cookie.Expires.IsZero() || time.Before(cookie.Expires)) {
 			logger.Printf("Rejecting expired cookie: %v", cookie)
-		} else if url.Path != "" && !strings.HasPrefix(url.Path, cookie.Path) {
+		} else if !pathMatches(path, cookie.Path) {
 			logger.Printf("Rejecting cookie due to unmatched path: %v", cookie)
 		} else if name != "" && cookie.Name != name {
 			logger.Printf("Rejecting cookie due to unmatched name: %v", cookie)
@@ -131,6 +136,13 @@ func appliesToURLAndNameAtTime(url *url.URL, name string, time time.Time, logger
 		}
 		return false
 	})
+}
+
+// pathMatches implements path-match from RFC 6265 §5.1.4.
+func pathMatches(requestPath string, cookiePath string) bool {
+	return requestPath == cookiePath ||
+		(strings.HasPrefix(requestPath, cookiePath) &&
+			(strings.HasSuffix(cookiePath, "/") || requestPath[len(cookiePath)] == '/'))
 }
 
 func hostMatchesDomain(host string, domain string) bool {
