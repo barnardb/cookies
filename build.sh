@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-[ $# -eq 1 ] && grep -qE '^\d+\.\d+\.\d+$' <<<"$1" || {
+[ $# -eq 1 ] && grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' <<<"$1" || {
   echo "usage: $0 <semantic-version>" >&2
   exit 2
 }

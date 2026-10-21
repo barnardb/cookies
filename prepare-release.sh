@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-[ $# -eq 1 ] && grep -qE '^\d+\.\d+\.\d+$' <<<"$1" || {
+[ $# -eq 1 ] && grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' <<<"$1" || {
   echo "usage: $0 <semantic-version>" >&2
   exit 2
 }
