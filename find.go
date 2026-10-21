@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,7 +19,30 @@ func contains(values []string, value string) bool {
 	return false
 }
 
-func findCookies(url *url.URL, name string, browsers []string, logger *Logger) (results []*kooky.Cookie) {
+// profileMatcher selects cookie stores by profile name. A store is selected
+// if its profile equals one of names or matches one of patterns. If both are
+// empty, every profile is selected.
+type profileMatcher struct {
+	names    []string
+	patterns []*regexp.Regexp
+}
+
+func (m profileMatcher) matches(profile string) bool {
+	if len(m.names) == 0 && len(m.patterns) == 0 {
+		return true
+	}
+	if contains(m.names, profile) {
+		return true
+	}
+	for _, pattern := range m.patterns {
+		if pattern.MatchString(profile) {
+			return true
+		}
+	}
+	return false
+}
+
+func findCookies(url *url.URL, name string, browsers []string, profiles profileMatcher, logger *Logger) (results []*kooky.Cookie) {
 	logger.Printf("Looking for browsers %v", browsers)
 	logger.Printf("Looking for cookies for URL %s", url)
 	filter := currentlyAppliesToURLAndName(url, name, logger.RequireVerbosity(2))
@@ -31,6 +55,10 @@ func findCookies(url *url.URL, name string, browsers []string, logger *Logger) (
 			}
 			logger.Printf("Looking for %s cookie stores", name)
 			kooky.ConcurrentlyVisitStores(finder, func(store kooky.CookieStore) {
+				if !profiles.matches(store.Profile()) {
+					logger.Printf("Skipping cookies from %v: profile %q not selected", store, store.Profile())
+					return
+				}
 				logger.Printf("Loading cookies from %v", store)
 				err := store.VisitCookies(func(cookie *kooky.Cookie, initializeValue kooky.CookieValueInitializer) error {
 					if !filter(cookie) {

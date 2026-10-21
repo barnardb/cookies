@@ -20,13 +20,14 @@ type options struct {
 	name          string
 	acceptMissing bool
 	verbosity     int
+	profiles      profileMatcher
 }
 
 func main() {
 	options := parseCommandLine()
 	logger := LoggerWithVerbosity(options.verbosity)
 
-	cookies := findCookies(options.url, options.name, options.browsers, logger)
+	cookies := findCookies(options.url, options.name, options.browsers, options.profiles, logger)
 	if len(cookies) == 0 {
 		if !options.acceptMissing {
 			os.Exit(1)
@@ -62,6 +63,8 @@ func parseCommandLine() (options options) {
 	flagSet.BoolVarP(&options.acceptMissing, "accept-missing", "a", false, "don't fail with exit status 1 when cookies aren't found")
 	flagSet.StringArrayVarP(&options.browsers, "browser", "b", []string{"chrome", "chromium", "firefox", "safari"}, "browser to try extracting a cookie from, can be repeated to try multiple browsers")
 	flagSet.CountVarP(&options.verbosity, "verbose", "v", "enables logging to stderr; specify it twice or provide `level` 2 to get per-cookie details (`-vv` or `--verbose=2`)")
+	flagSet.StringArrayVarP(&options.profiles.names, "profile", "p", nil, "browser profile to extract cookies from, by exact name; can be repeated (default all profiles)")
+	profileRegexes := flagSet.StringArray("profile-regex", nil, "browser profile to extract cookies from, by regular expression `pattern` (unanchored); can be repeated")
 
 	versionFlag := flagSet.Bool("version", false, "prints version information and exits")
 
@@ -71,6 +74,14 @@ func parseCommandLine() (options options) {
 			os.Exit(0)
 		}
 		fatalError(err)
+	}
+
+	for _, pattern := range *profileRegexes {
+		compiled, err := regexp.Compile(pattern)
+		if err != nil {
+			fatalError("error parsing --profile-regex:", err)
+		}
+		options.profiles.patterns = append(options.profiles.patterns, compiled)
 	}
 
 	if *versionFlag {
