@@ -1,0 +1,79 @@
+name: Release
+
+# Triggered by ./prepare-release.sh pushing a version tag. Builds binaries and creates a draft
+# release to review and publish by hand. Afterwards, run ./update.sh in barnardb/homebrew-cookies.
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          # macOS builds use cgo, like a Homebrew build, so the keychain is read via the
+          # Security framework rather than by shelling out to /usr/bin/security.
+          - { runner: macos-latest, goos: darwin, goarch: arm64, cgo: 1, cc: clang -arch arm64 }
+          - { runner: macos-latest, goos: darwin, goarch: amd64, cgo: 1, cc: clang -arch x86_64 }
+          - { runner: ubuntu-latest, goos: linux, goarch: amd64, cgo: 0 }
+          - { runner: ubuntu-latest, goos: linux, goarch: arm64, cgo: 0 }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+      CGO_ENABLED: ${{ matrix.cgo }}
+      CC: ${{ matrix.cc || 'cc' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        shell: bash
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          ./build.sh "$version"
+          file cookies
+          # Run the binary when the runner can execute it
+          if [ "$(go env GOHOSTOS)/$(go env GOHOSTARCH)" = "$GOOS/$GOARCH" ]; then
+            [ "$(./cookies --version)" = "$version" ]
+          fi
+          archive="cookies_${GITHUB_REF_NAME}_${GOOS}_${GOARCH}.tar.gz"
+          tar -czf "$archive" cookies LICENSE README.md
+          echo "ARCHIVE=$archive" >>"$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.ARCHIVE }}
+          path: ${{ env.ARCHIVE }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create draft release
+        shell: bash
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha256sum cookies_*.tar.gz >sha256sums.txt
+          cat sha256sums.txt
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --draft --verify-tag --generate-notes --title "$GITHUB_REF_NAME" \
+            cookies_*.tar.gz sha256sums.txt
