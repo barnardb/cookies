@@ -1,6 +1,6 @@
 module github.com/barnardb/cookies
 
-go 1.26.0
+go 1.27.3
 
 require (
 	github.com/browserutils/kooky v0.2.10
