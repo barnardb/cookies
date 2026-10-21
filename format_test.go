@@ -44,6 +44,18 @@ func TestWriteStrongestValue(t *testing.T) {
 			testCookie("sid", "root", "example.com", "/", newer),
 			testCookie("sid", "deep", "example.com", "/foo", older),
 		}, "deep"},
+		{"host-only beats domain cookie for the same domain", []*kooky.Cookie{
+			testCookie("sid", "domain", ".example.com", "/", newer),
+			testCookie("sid", "host-only", "example.com", "/", older),
+		}, "host-only"},
+		{"host-only beats domain cookie regardless of order", []*kooky.Cookie{
+			testCookie("sid", "host-only", "example.com", "/", older),
+			testCookie("sid", "domain", ".example.com", "/foo", newer),
+		}, "host-only"},
+		{"longer domain still beats host-only", []*kooky.Cookie{
+			testCookie("sid", "host-only", "example.com", "/", older),
+			testCookie("sid", "sub", ".www.example.com", "/", older),
+		}, "sub"},
 		{"newer wins for same domain and path", []*kooky.Cookie{
 			testCookie("sid", "old", "example.com", "/", older),
 			testCookie("sid", "new", "example.com", "/", newer),

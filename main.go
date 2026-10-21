@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/browserutils/kooky"
 	flag "github.com/spf13/pflag"
@@ -112,11 +113,27 @@ func parseCommandLine() (options options) {
 func writeStrongestValue(w io.Writer, cookies []*kooky.Cookie) {
 	strongest := cookies[0]
 	for _, cookie := range cookies[1:] {
-		if len(cookie.Domain) > len(strongest.Domain) || (cookie.Domain == strongest.Domain &&
-			(len(cookie.Path) > len(strongest.Path) || (cookie.Path == strongest.Path &&
-				cookie.Creation.After(strongest.Creation)))) {
+		if isStronger(cookie, strongest) {
 			strongest = cookie
 		}
 	}
 	fmt.Fprint(w, strongest.Value)
+}
+
+// isStronger reports whether a is more specific than b: a longer domain wins, then a host-only
+// cookie (no leading dot) beats a domain cookie for the same domain, then a longer path wins,
+// then the newer cookie.
+func isStronger(a, b *kooky.Cookie) bool {
+	aDomain, aIsDomainCookie := strings.CutPrefix(a.Domain, ".")
+	bDomain, bIsDomainCookie := strings.CutPrefix(b.Domain, ".")
+	if len(aDomain) != len(bDomain) {
+		return len(aDomain) > len(bDomain)
+	}
+	if aIsDomainCookie != bIsDomainCookie {
+		return !aIsDomainCookie
+	}
+	if len(a.Path) != len(b.Path) {
+		return len(a.Path) > len(b.Path)
+	}
+	return a.Creation.After(b.Creation)
 }
