@@ -7,8 +7,8 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/browserutils/kooky"
 	flag "github.com/spf13/pflag"
-	"github.com/zellyn/kooky"
 )
 
 // Overridden by the linker at build time.

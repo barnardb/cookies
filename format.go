@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/zellyn/kooky"
+	"github.com/browserutils/kooky"
 	"io"
 )
 

@@ -1,16 +1,23 @@
 module github.com/barnardb/cookies
 
-go 1.15
+go 1.24.0
 
 require (
-	github.com/spf13/pflag v1.0.5
-	github.com/zellyn/kooky v0.0.0-20201108220156-bec09c12c339
+	github.com/browserutils/kooky v0.2.10
+	github.com/spf13/pflag v1.0.10
 )
 
-// We are currently using the head of <https://github.com/barnardb/kooky/tree/visitors>.
-// I decided to use my fork while waiting for https://github.com/zellyn/kooky/pull/43
-// to be merged, but then decided to do some work to allow the kind of
-// parallelism and defered decrypting I wanted to have. The result is a
-// speed-up taking a typical use case of mine from ~1200ms to ~100ms.
-// I intend to try to contribute these changes back upstream.
-replace github.com/zellyn/kooky => github.com/barnardb/kooky v0.0.0-20210125015714-b0182bf77e67
+require (
+	github.com/browserutils/ese v0.0.0-20260314233042-37b6a03a93ce // indirect
+	github.com/browserutils/sqlite3 v0.0.2 // indirect
+	github.com/godbus/dbus/v5 v5.2.2 // indirect
+	github.com/gonuts/binary v0.2.0 // indirect
+	github.com/keybase/go-keychain v0.0.1 // indirect
+	github.com/pierrec/lz4/v4 v4.1.26 // indirect
+	github.com/zalando/go-keyring v0.2.7 // indirect
+	golang.org/x/crypto v0.48.0 // indirect
+	golang.org/x/net v0.50.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/text v0.34.0 // indirect
+	gopkg.in/ini.v1 v1.67.1 // indirect
+)

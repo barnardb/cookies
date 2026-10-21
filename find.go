@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/zellyn/kooky"
-	_ "github.com/zellyn/kooky/allbrowsers"
+	"github.com/browserutils/kooky"
+	_ "github.com/browserutils/kooky/browser/all"
 )
 
 func contains(values []string, value string) bool {
@@ -49,35 +53,44 @@ func findCookies(url *url.URL, name string, browsers []string, profiles profileM
 
 	cookies := make(chan *kooky.Cookie)
 	go func() {
-		kooky.ConcurrentlyVisitFinders(func(name string, finder kooky.CookieStoreFinder) {
-			if !contains(browsers, name) {
-				return
+		var wg sync.WaitGroup
+		for store, err := range kooky.TraverseCookieStores(context.Background()) {
+			if err != nil {
+				// Finders report every browser that isn't installed, so this is only interesting in detail.
+				logger.RequireVerbosity(2).Printf("Error finding cookie stores: %s", err)
+				continue
 			}
-			logger.Printf("Looking for %s cookie stores", name)
-			kooky.ConcurrentlyVisitStores(finder, func(store kooky.CookieStore) {
-				if !profiles.matches(store.Profile()) {
-					logger.Printf("Skipping cookies from %v: profile %q not selected", store, store.Profile())
-					return
-				}
-				logger.Printf("Loading cookies from %v", store)
-				err := store.VisitCookies(func(cookie *kooky.Cookie, initializeValue kooky.CookieValueInitializer) error {
-					if !filter(cookie) {
-						return nil
+			if !contains(browsers, store.Browser()) {
+				store.Close()
+				continue
+			}
+			if _, err := os.Stat(store.FilePath()); err != nil {
+				// Finders also propose candidate paths that may not exist, e.g. Chrome's pre-v96 location.
+				logger.RequireVerbosity(2).Printf("Skipping cookies from %s: %s", describeStore(store), err)
+				store.Close()
+				continue
+			}
+			if !profiles.matches(store.Profile()) {
+				logger.Printf("Skipping cookies from %s: profile %q not selected", describeStore(store), store.Profile())
+				store.Close()
+				continue
+			}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				defer store.Close()
+				logger.Printf("Loading cookies from %s", describeStore(store))
+				for cookie, err := range store.TraverseCookies(filter) {
+					if err != nil {
+						logger.Printf("Error loading cookies from %s: %s", describeStore(store), err)
+						continue
 					}
-					err := initializeValue(cookie)
-					if err == nil {
-						cookies <- cookie
-					}
-					return err
-				})
-				if err != nil {
-					logger.Printf("Error loading cookies from %v: %s", store, err)
-				} else {
-					logger.Printf("Done loading cookies from %v", store)
+					cookies <- cookie
 				}
-			})
-			logger.Printf("Done loading from %s cookie stores", name)
-		})
+				logger.Printf("Done loading cookies from %s", describeStore(store))
+			}()
+		}
+		wg.Wait()
 		close(cookies)
 	}()
 	for cookie := range cookies {
@@ -85,6 +98,10 @@ func findCookies(url *url.URL, name string, browsers []string, profiles profileM
 	}
 	logger.Printf("Found %d matching cookie(s)", len(results))
 	return
+}
+
+func describeStore(store kooky.CookieStore) string {
+	return fmt.Sprintf("%s profile %q (%s)", store.Browser(), store.Profile(), store.FilePath())
 }
 
 func currentlyAppliesToURLAndName(url *url.URL, name string, logger *Logger) kooky.Filter {
@@ -95,7 +112,9 @@ func currentlyAppliesToURLAndName(url *url.URL, name string, logger *Logger) koo
 
 func appliesToURLAndNameAtTime(url *url.URL, name string, time time.Time, logger *Logger) kooky.Filter {
 	urlIsNotSecure := url.Scheme != "https"
-	return func(cookie *kooky.Cookie) bool {
+	// A plain FilterFunc (not a ValueFilterFunc) lets kooky apply the filter before decrypting
+	// values, so we only touch the keychain for browsers that have a matching cookie.
+	return kooky.FilterFunc(func(cookie *kooky.Cookie) bool {
 		if !hostMatchesDomain(url.Host, cookie.Domain) {
 			logger.Printf("Rejecting cookie for non-matching domain: %v", cookie)
 		} else if urlIsNotSecure && cookie.Secure {
@@ -111,7 +130,7 @@ func appliesToURLAndNameAtTime(url *url.URL, name string, time time.Time, logger
 			return true
 		}
 		return false
-	}
+	})
 }
 
 func hostMatchesDomain(host string, domain string) bool {
